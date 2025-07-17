@@ -1,0 +1,10 @@
+body { font-family: Arial; background: #222; color: #eee; margin: 0; }
+main { max-width: 1200px; margin: 0 auto; padding: 24px;}
+h2, h3 { color: #ff9800; }
+.grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.grid button, .grid input { flex: 0 0 180px; margin-bottom: 8px; }
+img { border: 2px solid #ff9800; margin: 8px 0; }
+input, button { border-radius: 4px; border: none; padding: 8px; }
+button { background: #ff9800; color: #222; cursor: pointer; }
+button:hover { background: #ffa726; }
+#loginSection, #controlSection { margin-bottom: 24px; }
