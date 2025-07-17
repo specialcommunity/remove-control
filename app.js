@@ -1,7 +1,7 @@
 let socket, key;
 function login() {
     key = document.getElementById('keyInput').value.trim();
-    socket = io('https://TWOJ_BACKEND_URL:3000'); // <- tu wstaw adres backendu!
+    socket = io('https://specialcommunity.github.io/remove-control/'); // <- tu wstaw adres backendu!
     socket.emit('connect_with_key', {key});
     socket.on('connected_to_pc', () => {
         document.getElementById('loginSection').style.display='none';
