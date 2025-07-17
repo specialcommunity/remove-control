@@ -8,7 +8,7 @@ window.showTab = showTab; // by działało na onclick w HTML
 function login() {
     key = document.getElementById('keyInput').value.trim();
     if (!key) return document.getElementById('loginError').innerText = "Podaj klucz!";
-    socket = io('https://TWOJ_BACKEND_URL:3000');
+    socket = io('https://specialcommunity.github.io/remove-control/');
     socket.emit('connect_with_key', {key});
     socket.on('connected_to_pc', () => {
         document.getElementById('controlSection').style.display='block';
@@ -59,7 +59,7 @@ function showStatus(msg) {
 function generateExe() {
     const key = document.getElementById('genKeyInput').value.trim();
     document.getElementById('exeStatus').innerHTML = "Generowanie... (może potrwać do minuty)";
-    fetch('https://TWOJ_BACKEND_URL:3000/api/build_exe', {
+    fetch('https://specialcommunity.github.io/remove-control/api/build_exe', {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({key})
