@@ -6,24 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js" defer></script>
 </head>
 <body>
     <main>
         <nav>
             <span class="logo">🖥️ SuperPanel</span>
-            <a href="#" onclick="showTab('control')">Kontrola</a>
-            <a href="#" onclick="showTab('build')">Generator .exe</a>
-            <a href="#" onclick="showTab('playit')">playit.gg</a>
-            <a href="#" onclick="showTab('about')">O projekcie</a>
+            <a href="#" data-tab="controlTab" class="tablink active">Kontrola</a>
+            <a href="#" data-tab="buildTab" class="tablink">Generator .exe</a>
+            <a href="#" data-tab="playitTab" class="tablink">playit.gg</a>
+            <a href="#" data-tab="aboutTab" class="tablink">O projekcie</a>
         </nav>
 
         <!-- Kontrola PC -->
-        <section id="controlTab" class="tab">
+        <section id="controlTab" class="tab-section">
             <h2>Połącz się z komputerem</h2>
             <div class="form-row">
                 <input type="text" id="keyInput" placeholder="Wpisz klucz">
-                <button onclick="login()">Połącz</button>
+                <button id="loginBtn">Połącz</button>
                 <span id="loginError"></span>
             </div>
             <div id="controlSection" style="display:none;">
@@ -38,9 +38,8 @@
                     </div>
                 </div>
                 <div id="functionsPanel">
-                    <h3>Funkcje sterowania (50+)</h3>
+                    <h3>Funkcje sterowania (przykład)</h3>
                     <div class="grid">
-                        <!-- Przykładowe funkcje, reszta w app.js -->
                         <button onclick="send('mouse_left')">Lewy klik</button>
                         <button onclick="send('mouse_right')">Prawy klik</button>
                         <button onclick="send('mouse_double')">Dwuklik</button>
@@ -71,7 +70,6 @@
                         <input type="text" id="cmdInput" placeholder="Polecenie CMD">
                         <button onclick="send('chat',{msg:getChat()})">Czat z PC</button>
                         <input type="text" id="chatInput" placeholder="Wiadomość">
-                        <!-- Dodaj kolejne funkcje według wzoru -->
                     </div>
                     <div id="statusBox"></div>
                 </div>
@@ -79,18 +77,18 @@
         </section>
 
         <!-- Generator .exe -->
-        <section id="buildTab" class="tab" style="display:none;">
+        <section id="buildTab" class="tab-section" style="display:none;">
             <h2>Stwórz swój program .exe!</h2>
-            <p>Wygeneruj spersonalizowanego klienta .exe z własnym kluczem – uruchom na swoim PC, a potem kontroluj z tej strony!</p>
+            <p>Wygeneruj .exe z własnym kluczem – uruchom na swoim PC, a potem kontroluj z tej strony!</p>
             <div class="form-row">
                 <input type="text" id="genKeyInput" placeholder="Klucz (opcjonalnie)">
-                <button onclick="generateExe()">Pobierz .exe</button>
+                <button id="generateExeBtn">Pobierz .exe</button>
             </div>
             <div id="exeStatus"></div>
         </section>
 
         <!-- playit.gg -->
-        <section id="playitTab" class="tab" style="display:none;">
+        <section id="playitTab" class="tab-section" style="display:none;">
             <h2>Hostowanie przez playit.gg</h2>
             <p>
                 <b>Krok 1:</b> <a href="https://playit.gg/download" target="_blank">Pobierz playit.gg</a><br>
@@ -101,11 +99,12 @@
         </section>
 
         <!-- O projekcie -->
-        <section id="aboutTab" class="tab" style="display:none;">
+        <section id="aboutTab" class="tab-section" style="display:none;">
             <h2>O projekcie</h2>
             <p>
-                SuperPanel to nowoczesny system zdalnej kontroli komputera – podgląd ekranu, kamerki, 50+ funkcji, integracja z Discordem i automatyczny autostart klienta.<br>
-                Kod frontend jest całkowicie hostowalny na GitHub Pages. Backend (Node.js) oraz klient .exe hostuj na własnym serwerze.<br>
+                SuperPanel to system zdalnej kontroli komputera – podgląd ekranu, kamerki, 50+ funkcji, integracja z Discordem i generator .exe.<br>
+                Kod frontend hostuj na GitHub Pages.<br>
+                Backend (Node.js) oraz klient .exe hostuj na własnym serwerze.<br>
                 <b>Projekt open-source!</b>
             </p>
         </section>
