@@ -1,14 +1,28 @@
 let socket, key, exeStatusTimeout;
-function showTab(tab) {
-    document.querySelectorAll('.tab').forEach(s => s.style.display = 'none');
-    document.getElementById(tab + 'Tab').style.display = 'block';
-}
-window.showTab = showTab; // by działało na onclick w HTML
+
+// Tab navigation
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tablink').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.tablink').forEach(l=>l.classList.remove('active'));
+            link.classList.add('active');
+            document.querySelectorAll('.tab-section').forEach(t=>t.style.display='none');
+            document.getElementById(link.getAttribute('data-tab')).style.display = 'block';
+        });
+    });
+    // Default tab
+    document.querySelector('.tablink.active').click();
+    // Buttons
+    document.getElementById('loginBtn').onclick = login;
+    document.getElementById('generateExeBtn').onclick = generateExe;
+});
 
 function login() {
     key = document.getElementById('keyInput').value.trim();
     if (!key) return document.getElementById('loginError').innerText = "Podaj klucz!";
-    socket = io('https://specialcommunity.github.io/remove-control/');
+    // Podmień na swój backend!
+    socket = io('https://your-backend-server.com:3000');
     socket.emit('connect_with_key', {key});
     socket.on('connected_to_pc', () => {
         document.getElementById('controlSection').style.display='block';
@@ -20,15 +34,11 @@ function login() {
     socket.on('status', msg => showStatus(msg));
     socket.on('notify', msg => alert(msg));
 }
-window.login = login;
-
 function send(command, data={}) {
     if (!key || !socket) return;
     socket.emit('control_command', {key, command, data});
 }
-window.send = send;
-
-// Funkcje pobierające wartości z inputów
+// Pomocnicze funkcje do inputów
 function getUrl() { return document.getElementById('urlInput').value; }
 function getProgram() { return document.getElementById('programInput').value; }
 function getFileName() { 
@@ -59,7 +69,7 @@ function showStatus(msg) {
 function generateExe() {
     const key = document.getElementById('genKeyInput').value.trim();
     document.getElementById('exeStatus').innerHTML = "Generowanie... (może potrwać do minuty)";
-    fetch('https://specialcommunity.github.io/remove-control/api/build_exe', {
+    fetch('https://your-backend-server.com:3000/api/build_exe', {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({key})
@@ -72,4 +82,3 @@ function generateExe() {
         document.getElementById('exeStatus').innerHTML = "Plik .exe wygenerowany! Uruchom go na swoim PC.";
     }).catch(()=>{document.getElementById('exeStatus').innerHTML = "Błąd generowania .exe.";});
 }
-window.generateExe = generateExe;
