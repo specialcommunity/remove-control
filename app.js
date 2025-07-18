@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function login() {
     key = document.getElementById('keyInput').value.trim();
     if (!key) return document.getElementById('loginError').innerText = "Podaj klucz!";
-    // Ustaw swój backend! Przykład z playit.gg:
+    // Adres backendu przez playit.gg:
     socket = io('https://cell-membership.gl.at.ply.gg:19701', { transports: ['websocket'] });
     socket.emit('connect_with_key', {key});
     socket.on('connected_to_pc', () => {
