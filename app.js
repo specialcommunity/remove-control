@@ -11,8 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(link.getAttribute('data-tab')).style.display = 'block';
         });
     });
-    // Default tab
-    document.querySelector('.tablink.active').click();
+    // Pokaż od razu pierwszą zakładkę
+    document.querySelectorAll('.tab-section').forEach(s=>s.style.display='none');
+    document.getElementById('controlTab').style.display='block';
+
     document.getElementById('loginBtn').onclick = login;
     document.getElementById('generateExeBtn').onclick = generateExe;
 });
